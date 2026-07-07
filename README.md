@@ -80,3 +80,5 @@ Research students and faculty across departments lack a centralized platform to 
 - Grant opportunity aggregator (RSS/web scraping)
 - Citation network visualization
 - Plagiarism-aware research note sharing
+
+made under cusoc

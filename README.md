@@ -81,4 +81,3 @@ Research students and faculty across departments lack a centralized platform to 
 - Citation network visualization
 - Plagiarism-aware research note sharing
 
-made under cusoc

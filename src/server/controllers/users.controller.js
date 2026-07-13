@@ -3,8 +3,7 @@ const User = require('../models/User');
 exports.getCurrentUser = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-passwordHash')
-      .populate('projects', 'title status')
-      .populate('publications', 'title doi');
+      .populate('projects', 'title status');
     if (!user) return res.status(404).json({ message: 'User not found' });
     res.json(user);
   } catch (err) {
@@ -42,8 +41,7 @@ exports.updateProfile = async (req, res) => {
 exports.getUserById = async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select('-passwordHash')
-      .populate('projects', 'title status')
-      .populate('publications', 'title doi');
+      .populate('projects', 'title status');
     if (!user) return res.status(404).json({ message: 'User not found' });
     res.json(user);
   } catch (err) {

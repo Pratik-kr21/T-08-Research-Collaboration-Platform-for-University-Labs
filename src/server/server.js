@@ -17,6 +17,12 @@ app.get('/', (req, res) => {
   res.send('ResearchHub API is running');
 });
 
+// API Routes
+app.use('/api/auth', require('./routes/auth.routes'));
+app.use('/api/users', require('./routes/users.routes'));
+app.use('/api/projects', require('./routes/projects.routes'));
+app.use('/api/collaboration-requests', require('./routes/collaboration.routes'));
+
 // Database connection
 const connectDB = async () => {
   try {

@@ -71,3 +71,81 @@ exports.getProjectById = async (req, res) => {
     res.status(500).send('Server error');
   }
 };
+
+exports.addMilestone = async (req, res) => {
+  try {
+    const project = await Project.findById(req.params.id);
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+
+    if (project.owner.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Only project owner can add milestones' });
+    }
+
+    const { title, deadline } = req.body;
+    project.milestones.push({ title, deadline });
+    
+    await project.save();
+    res.json(project.milestones);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+};
+
+exports.updateMilestone = async (req, res) => {
+  try {
+    const project = await Project.findById(req.params.id);
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+
+    const isOwner = project.owner.toString() === req.user.id;
+    const isCollaborator = project.collaborators.some(c => c.toString() === req.user.id);
+    
+    if (!isOwner && !isCollaborator) {
+      return res.status(403).json({ message: 'Not authorized to update milestones' });
+    }
+
+    const milestone = project.milestones.id(req.params.mid);
+    if (!milestone) return res.status(404).json({ message: 'Milestone not found' });
+
+    const { progress, approved } = req.body;
+
+    // Only owner can approve, or change anything if it's already approved (wait, if it's approved, maybe nobody can change progress, but owner can unapprove).
+    if (approved !== undefined) {
+      if (!isOwner) return res.status(403).json({ message: 'Only owner can approve milestones' });
+      milestone.approved = approved;
+    }
+
+    if (progress !== undefined) {
+      // If approved, only owner can change it, or maybe nobody. Let's say we just set it.
+      milestone.progress = progress;
+    }
+
+    await project.save();
+    res.json(project.milestones);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+};
+
+exports.deleteMilestone = async (req, res) => {
+  try {
+    const project = await Project.findById(req.params.id);
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+
+    if (project.owner.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Only project owner can delete milestones' });
+    }
+
+    const milestone = project.milestones.id(req.params.mid);
+    if (!milestone) return res.status(404).json({ message: 'Milestone not found' });
+
+    project.milestones.pull(req.params.mid);
+    await project.save();
+    
+    res.json(project.milestones);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+};

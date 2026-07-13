@@ -11,6 +11,8 @@ import {
   CheckCircle,
   Clock,
   AlertCircle,
+  Plus,
+  Trash2
 } from 'lucide-react';
 import './ProjectDetail.css';
 
@@ -30,6 +32,8 @@ export default function ProjectDetail() {
   const [sendingRequest, setSendingRequest] = useState(false);
   const [requestMessage, setRequestMessage] = useState('');
   const [showRequestForm, setShowRequestForm] = useState(false);
+  const [showAddMilestone, setShowAddMilestone] = useState(false);
+  const [newMilestone, setNewMilestone] = useState({ title: '', deadline: '' });
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -58,6 +62,36 @@ export default function ProjectDetail() {
       alert(err.response?.data?.message || 'Failed to send request.');
     } finally {
       setSendingRequest(false);
+    }
+  };
+
+  const handleAddMilestone = async () => {
+    try {
+      const res = await API.post(`/projects/${id}/milestones`, newMilestone);
+      setProject({ ...project, milestones: res.data });
+      setShowAddMilestone(false);
+      setNewMilestone({ title: '', deadline: '' });
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to add milestone.');
+    }
+  };
+
+  const handleUpdateMilestone = async (mid, updates) => {
+    try {
+      const res = await API.put(`/projects/${id}/milestones/${mid}`, updates);
+      setProject({ ...project, milestones: res.data });
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to update milestone.');
+    }
+  };
+
+  const handleDeleteMilestone = async (mid) => {
+    if (!window.confirm('Are you sure you want to delete this milestone?')) return;
+    try {
+      const res = await API.delete(`/projects/${id}/milestones/${mid}`);
+      setProject({ ...project, milestones: res.data });
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to delete milestone.');
     }
   };
 
@@ -133,19 +167,68 @@ export default function ProjectDetail() {
             )}
 
             {/* Milestones */}
-            {project.milestones?.length > 0 && (
+            {(project.milestones?.length > 0 || isOwner) && (
               <div className="pd-section">
-                <h2>Milestones</h2>
+                <div className="section-header-flex" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <h2 style={{ margin: 0 }}>Milestones</h2>
+                  {isOwner && (
+                    <button 
+                      className="btn btn-outline btn-sm"
+                      onClick={() => setShowAddMilestone(!showAddMilestone)}
+                    >
+                      <Plus size={14} /> Add
+                    </button>
+                  )}
+                </div>
+                
+                {showAddMilestone && isOwner && (
+                  <div className="add-milestone-form card" style={{ marginBottom: '16px', padding: '16px' }}>
+                    <div className="form-group">
+                      <label className="form-label">Title</label>
+                      <input 
+                        type="text" 
+                        className="form-input"
+                        value={newMilestone.title}
+                        onChange={(e) => setNewMilestone({...newMilestone, title: e.target.value})}
+                        placeholder="e.g. Literature Review"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Deadline</label>
+                      <input 
+                        type="date" 
+                        className="form-input"
+                        value={newMilestone.deadline}
+                        onChange={(e) => setNewMilestone({...newMilestone, deadline: e.target.value})}
+                      />
+                    </div>
+                    <div className="request-form-actions">
+                      <button className="btn btn-outline btn-sm" onClick={() => setShowAddMilestone(false)}>Cancel</button>
+                      <button className="btn btn-primary btn-sm" onClick={handleAddMilestone} disabled={!newMilestone.title}>Save</button>
+                    </div>
+                  </div>
+                )}
+
                 <div className="milestones-list">
-                  {project.milestones.map((ms, i) => (
-                    <div key={i} className="milestone-item">
+                  {project.milestones?.map((ms) => (
+                    <div key={ms._id} className="milestone-item">
                       <div className="ms-header">
                         <span className="ms-title">{ms.title}</span>
-                        {ms.approved ? (
-                          <span className="badge badge-success"><CheckCircle size={12} /> Approved</span>
-                        ) : (
-                          <span className="badge badge-neutral"><Clock size={12} /> Pending</span>
-                        )}
+                        <div className="ms-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          {ms.approved ? (
+                            <span className="badge badge-success"><CheckCircle size={12} /> Approved</span>
+                          ) : (
+                            <span className="badge badge-neutral"><Clock size={12} /> Pending</span>
+                          )}
+                          {isOwner && !ms.approved && (
+                            <button className="btn btn-sm" style={{ padding: '4px 8px', fontSize: '12px', background: 'var(--success)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }} onClick={() => handleUpdateMilestone(ms._id, { approved: true })}>Approve</button>
+                          )}
+                          {isOwner && (
+                            <button className="btn btn-sm btn-icon" style={{ padding: '4px', background: 'transparent', color: 'var(--danger)', border: 'none', cursor: 'pointer' }} onClick={() => handleDeleteMilestone(ms._id)}>
+                              <Trash2 size={14} />
+                            </button>
+                          )}
+                        </div>
                       </div>
                       <div className="ms-bar-bg">
                         <div
@@ -154,13 +237,35 @@ export default function ProjectDetail() {
                         />
                       </div>
                       <div className="ms-footer">
-                        <span>{ms.progress || 0}% complete</span>
+                        {(!ms.approved && (isOwner || isCollaborator)) ? (
+                          <div className="progress-updater" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <input 
+                              type="range" 
+                              min="0" max="100" 
+                              value={ms.progress || 0}
+                              onChange={(e) => {
+                                const newMilestones = project.milestones.map(m => 
+                                  m._id === ms._id ? { ...m, progress: Number(e.target.value) } : m
+                                );
+                                setProject({ ...project, milestones: newMilestones });
+                              }}
+                              onMouseUp={(e) => handleUpdateMilestone(ms._id, { progress: Number(e.target.value) })}
+                              onTouchEnd={(e) => handleUpdateMilestone(ms._id, { progress: Number(e.target.value) })}
+                            />
+                            <span>{ms.progress || 0}%</span>
+                          </div>
+                        ) : (
+                          <span>{ms.progress || 0}% complete</span>
+                        )}
                         {ms.deadline && (
                           <span>Due: {new Date(ms.deadline).toLocaleDateString()}</span>
                         )}
                       </div>
                     </div>
                   ))}
+                  {project.milestones?.length === 0 && !showAddMilestone && (
+                    <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>No milestones added yet.</p>
+                  )}
                 </div>
               </div>
             )}

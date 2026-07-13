@@ -18,4 +18,19 @@ router.get('/', auth, projectsController.getProjects);
 // @access  Private
 router.get('/:id', auth, projectsController.getProjectById);
 
+// @route   POST api/projects/:id/milestones
+// @desc    Add a milestone to project
+// @access  Private
+router.post('/:id/milestones', auth, projectsController.addMilestone);
+
+// @route   PUT api/projects/:id/milestones/:mid
+// @desc    Update a milestone (progress/approval)
+// @access  Private
+router.put('/:id/milestones/:mid', auth, projectsController.updateMilestone);
+
+// @route   DELETE api/projects/:id/milestones/:mid
+// @desc    Delete a milestone
+// @access  Private
+router.delete('/:id/milestones/:mid', auth, projectsController.deleteMilestone);
+
 module.exports = router;

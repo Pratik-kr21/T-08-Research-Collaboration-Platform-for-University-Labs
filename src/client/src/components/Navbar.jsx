@@ -7,6 +7,7 @@ import {
   UserCircle,
   GitPullRequest,
   Database,
+  BookOpen,
   LogOut,
   Menu,
   X,
@@ -29,6 +30,7 @@ export default function Navbar() {
     { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/projects', label: 'Projects', icon: FolderSearch },
     { to: '/datasets', label: 'Datasets', icon: Database },
+    { to: '/publications', label: 'Publications', icon: BookOpen },
     { to: '/requests', label: 'Requests', icon: GitPullRequest },
     { to: '/profile', label: 'Profile', icon: UserCircle },
   ];
@@ -52,15 +54,15 @@ export default function Navbar() {
 
         <div className={`navbar-links ${mobileOpen ? 'open' : ''}`}>
           {navLinks.map((link) => (
-            <Link
+            <NavLink
               key={link.to}
               to={link.to}
-              className={`nav-link ${location.pathname === link.to ? 'active' : ''}`}
+              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
               onClick={() => setMobileOpen(false)}
             >
               <link.icon size={18} />
               <span>{link.label}</span>
-            </Link>
+            </NavLink>
           ))}
         </div>
 

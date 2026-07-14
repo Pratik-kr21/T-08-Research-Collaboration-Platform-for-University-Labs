@@ -10,6 +10,7 @@ import CreateProject from './pages/CreateProject';
 import Profile from './pages/Profile';
 import Requests from './pages/Requests';
 import Datasets from './pages/Datasets';
+import Publications from './pages/Publications';
 import { FlaskConical } from 'lucide-react';
 
 function PrivateRoute({ children }) {
@@ -99,6 +100,14 @@ function App() {
             element={
               <PrivateRoute>
                 <AppLayout><Datasets /></AppLayout>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/publications"
+            element={
+              <PrivateRoute>
+                <AppLayout><Publications /></AppLayout>
               </PrivateRoute>
             }
           />

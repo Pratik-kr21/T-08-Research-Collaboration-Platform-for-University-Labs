@@ -6,6 +6,7 @@ import {
   FolderSearch,
   UserCircle,
   GitPullRequest,
+  Database,
   LogOut,
   Menu,
   X,
@@ -27,6 +28,7 @@ export default function Navbar() {
   const navLinks = [
     { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/projects', label: 'Projects', icon: FolderSearch },
+    { to: '/datasets', label: 'Datasets', icon: Database },
     { to: '/requests', label: 'Requests', icon: GitPullRequest },
     { to: '/profile', label: 'Profile', icon: UserCircle },
   ];

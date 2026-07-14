@@ -22,6 +22,17 @@ exports.sendRequest = async (req, res) => {
     });
 
     const request = await newRequest.save();
+
+    // Emit real-time notification to project owner
+    if (req.io) {
+      req.io.to(project.owner.toString()).emit('notification', {
+        type: 'newRequest',
+        message: `You have a new collaboration request for project: ${project.title}`,
+        projectId: project._id,
+        sender: req.user.id
+      });
+    }
+
     res.json(request);
   } catch (err) {
     console.error(err.message);

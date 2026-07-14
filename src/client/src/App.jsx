@@ -1,5 +1,8 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { io } from 'socket.io-client';
+import toast from 'react-hot-toast';
 import Navbar from './components/Navbar';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -29,6 +32,33 @@ function PrivateRoute({ children }) {
 }
 
 function AppLayout({ children }) {
+  const { user } = useAuth();
+  const [socket, setSocket] = useState(null);
+
+  useEffect(() => {
+    if (user?._id) {
+      const newSocket = io(import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000');
+      
+      newSocket.emit('join', user._id);
+
+      newSocket.on('notification', (data) => {
+        toast(data.message, {
+          icon: '🔔',
+          duration: 5000,
+          style: {
+            borderRadius: '10px',
+            background: 'var(--surface-color)',
+            color: 'var(--text-primary)',
+            border: '1px solid var(--primary-500)',
+          }
+        });
+      });
+
+      setSocket(newSocket);
+      return () => newSocket.close();
+    }
+  }, [user]);
+
   return (
     <>
       <Navbar />

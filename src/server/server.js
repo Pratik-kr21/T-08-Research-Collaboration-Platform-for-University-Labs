@@ -32,6 +32,7 @@ app.use('/api/users', require('./routes/users.routes'));
 app.use('/api/projects', require('./routes/projects.routes'));
 app.use('/api/collaboration-requests', require('./routes/collaboration.routes'));
 app.use('/api/datasets', require('./routes/datasets.routes'));
+app.use('/api/publications', require('./routes/publications.routes'));
 
 // Global Error Handler
 app.use((err, req, res, next) => {
